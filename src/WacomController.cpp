@@ -79,7 +79,13 @@ hidclaim_t WacomController::claim_collection(USBHIDParser *driver, Device_t *dev
 
   collections_claimed++;
   mydevice = dev;
-  driver_ = driver;
+
+  // See if maybe we have multiple HIDParsers calling us:
+  uint8_t i;
+  for (i = 0; i < drivers_cnt_; i++) {
+    if (drivers_[i] == driver); // already in list
+  }
+  if ((i == drivers_cnt_) && (drivers_cnt_ < MAX_DRIVERS)) drivers_[drivers_cnt_++] = driver;
   idProduct_ = dev->idProduct;
   return (tablet_info_index_ == 0xff)? CLAIM_REPORT : CLAIM_INTERFACE;
 }
@@ -89,6 +95,7 @@ void WacomController::disconnect_collection(Device_t *dev) {
   if (--collections_claimed == 0) {
     mydevice = NULL;
     tablet_info_index_ = 0xff;
+    drivers_cnt_ = 0;
   }
 }
 
@@ -111,7 +118,8 @@ void WacomController::hid_input_begin(uint32_t topusage, uint32_t type, int lgmi
 	
 	if(s_tablets_info[tablet_info_index_].report_id != 0) {
 		static const uint8_t set_report_data[2] = {s_tablets_info[tablet_info_index_].report_id, s_tablets_info[tablet_info_index_].report_value};
-		driver_->sendControlPacket(0x21, 9, 0x0302, 0, 2, (void*)set_report_data); 
+    // will assume first one for now...
+		drivers_[0]->sendControlPacket(0x21, 9, 0x0302, 0, 2, (void*)set_report_data); 
   }
  }
 }
@@ -552,7 +560,7 @@ bool WacomController::decodeH640P(const uint8_t *data, uint16_t len) {
 	// C9 39 (y)
 	// 00 00 (pressure)
 	// 00 00 00 00 00 00 00 00 
-    bool range = (data[1] & 0x80) == 0x80;
+//    bool range = (data[1] & 0x80) == 0x80;
     bool prox = (data[1] & 0x40) == 0x40;
     bool rdy = (data[1] & 0xC0) == 0xC0;
     buttons = 0;

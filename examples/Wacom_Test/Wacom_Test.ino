@@ -5,6 +5,7 @@
 
 #include "USBHost_t36.h"
 #include "WacomController.h"
+#include "HIDFeatureReports.h"
 
 USBHost myusb;
 USBHub hub1(myusb);
@@ -33,8 +34,8 @@ void setup() {
   Serial1.begin(2000000);
   while (!Serial)
     ;  // wait for Arduino Serial Monitor
-  Serial.println("\n\nUSB Host Testing");
-  Serial.println(sizeof(USBHub), DEC);
+  Serial.println("\n\nWacom Tablet class Testing");
+  if (CrashReport)Serial.print(CrashReport);
   myusb.begin();
 }
 
@@ -51,6 +52,8 @@ void loop() {
       if (show_changed_only) Serial.println("\n** Turned on Show Changed Only mode **");
       else
         Serial.println("\n** Turned off Show Changed Only mode **");
+    } else if (ch == 'h') {
+      PrintHIDFeaturesInfo();
     } else {
       if (digi1.debugPrint()) {
         digi1.debugPrint(false);
@@ -168,4 +171,24 @@ void loop() {
     Serial.println();
     digi1.digitizerDataClear();
   }
+}
+
+//=============================================================================
+// Hack to see if we can enumerate the HID Feature Reports.
+//=============================================================================
+void PrintHIDFeaturesInfo() {
+
+  HIDFeatureReports hfr;
+
+
+  // This is a real giant hack!
+  uint8_t drivers_cnt = digi1.getDriverCnt();
+
+  for (uint8_t i = 0; i < drivers_cnt; i++ ) {
+    Serial.println("\n*********************************************");
+    hfr.setHIDParser(digi1.getDriver(i));
+    hfr.parseHIDReportDescriptor(true);
+    hfr.printFeatureReportList();
+  }
+
 }

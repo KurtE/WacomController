@@ -58,7 +58,13 @@ public:
   bool debugPrint() {
     return debugPrint_;
   }
-  enum {MAX_TOUCH = 16};
+  enum {MAX_TOUCH = 16, MAX_DRIVERS = 3};
+
+  uint8_t getDriverCnt() {return drivers_cnt_;};  
+  USBHIDParser *getDriver(uint8_t index) {
+    return (index < drivers_cnt_)? drivers_[index] :nullptr;
+  }
+
 protected:
   virtual hidclaim_t claim_collection(USBHIDParser *driver, Device_t *dev, uint32_t topusage);
   virtual void hid_input_begin(uint32_t topusage, uint32_t type, int lgmin, int lgmax);
@@ -115,7 +121,9 @@ private:
   int digiAxes[16];
   bool debugPrint_ = true;
   bool firstInput_ = true;
-  USBHIDParser *driver_ = nullptr;
+  uint8_t drivers_cnt_ = 0;
+  USBHIDParser *drivers_[MAX_DRIVERS] = {nullptr};
+
   uint16_t idProduct_;
   uint8_t tablet_info_index_ = 0xff;
   event_type_t event_type_ = NONE;
