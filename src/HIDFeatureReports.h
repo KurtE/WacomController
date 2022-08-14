@@ -26,7 +26,7 @@ public:
     uint8_t  feature_type;  
   } FEATURE_REPORTS_t;
   
-  enum {MAX_FEATURE_REPORTS=32};
+  enum {MAX_FEATURE_REPORTS=100};
   FEATURE_REPORTS_t feature_reports[MAX_FEATURE_REPORTS];
 
 private:
